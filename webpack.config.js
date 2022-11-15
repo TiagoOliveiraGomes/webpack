@@ -1,51 +1,49 @@
-const webpack = require('webpack')
-// ExtractTextPlugin foi adicionado no ex.10
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const modoDev = process.env.NODE_ENV !== "production";
+const webpack = require("webpack");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 
 module.exports = {
-    entry: './src/main',
-    output: {
-        path: __dirname + '/public',
-        filename: './main.js'
-    },
-    devServer: {
-        port: 8080,
-        contentBase: './public'
-    },
-    // ExtractTextPlugin foi adicionado no ex.10
-    plugins: [
-        new ExtractTextPlugin('style.css')
+  mode: modoDev ? "development" : "production",
+  entry: "./src/main",
+  output: {
+    filename: "main.js",
+    path: __dirname + "/public",
+  },
+  devServer: {
+    contentBase: "./public",
+    port: 9000,
+  },
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+      }),
+      new OptimizeCSSAssetsPlugin({}),
     ],
-    // O loader de js foi adicionado no ex.6
-    module: {
-        rules: [
-            {
-              test: /\.s[ac]ss$/i,
-              use: [
-                // Creates `style` nodes from JS strings
-                "style-loader",
-                // Translates CSS into CommonJS
-                "css-loader",
-                // Compiles Sass to CSS
-                "sass-loader",
-              ],
-            },
-          ],
-        loaders: [{
-            test: /.js?$/,
-            loader: 'babel-loader',
-            exclude: /node_modules/,
-            query: {
-                // Preset 'react' adicionado no ex.9
-                presets: ['es2015', 'react'],
-                // Plugin adicionado no ex.7
-                plugins: ['transform-object-rest-spread']
-            }
-        }, 
-        // O loader de css foi adicionado no ex.10
-        {
-            test: /\.css$/,
-            loader: ExtractTextPlugin.extract("style-loader", "css-loader")
-        }]
-    }
-}
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "estilo.css",
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.s?[ac]ss$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          // 'style-loader', // Adiciona CSS a DOM injetando a tag <style>
+          "css-loader", // interpreta @import, url()...
+          "sass-loader",
+        ],
+      },
+      {
+        test: /\.(png|svg|jpg|gif)$/,
+        use: ["file-loader"],
+      },
+    ],
+  },
+};
